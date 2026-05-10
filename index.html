@@ -20,9 +20,7 @@
       --radius: 18px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -38,9 +36,7 @@
       padding: 18px 14px 32px;
     }
 
-    header {
-      padding: 8px 4px 14px;
-    }
+    header { padding: 8px 4px 14px; }
 
     .title {
       font-size: 28px;
@@ -185,9 +181,7 @@
       border: 1px solid var(--line);
     }
 
-    .action-btn.danger {
-      color: var(--danger);
-    }
+    .action-btn.danger { color: var(--danger); }
 
     .history-list {
       display: flex;
@@ -208,9 +202,7 @@
       font-size: 14px;
     }
 
-    .history-main {
-      min-width: 0;
-    }
+    .history-main { min-width: 0; }
 
     .history-task {
       font-weight: 700;
@@ -230,16 +222,14 @@
 
     dialog {
       width: calc(100% - 28px);
-      max-width: 540px;
+      max-width: 560px;
       border: none;
       border-radius: 20px;
       padding: 0;
       box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
     }
 
-    dialog::backdrop {
-      background: rgba(0, 0, 0, 0.35);
-    }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
 
     .modal-body {
       padding: 18px;
@@ -293,6 +283,60 @@
       font-weight: 800;
     }
 
+    .task-manage-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 58vh;
+      overflow: auto;
+      padding-right: 2px;
+      margin-top: 10px;
+    }
+
+    .task-manage-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+      background: #ffffff;
+    }
+
+    .task-manage-item.hidden-task {
+      opacity: 0.55;
+      background: #f9fafb;
+    }
+
+    .task-manage-name {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .task-manage-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .toggle-btn {
+      min-width: 86px;
+      border-radius: 999px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .toggle-btn.off {
+      background: #ffffff;
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+
     .toast {
       position: fixed;
       left: 50%;
@@ -324,25 +368,11 @@
     }
 
     @media (max-width: 430px) {
-      .app {
-        padding: 14px 10px 28px;
-      }
-
-      .title {
-        font-size: 25px;
-      }
-
-      .score-main {
-        font-size: 31px;
-      }
-
-      .task-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .actions {
-        grid-template-columns: 1fr;
-      }
+      .app { padding: 14px 10px 28px; }
+      .title { font-size: 25px; }
+      .score-main { font-size: 31px; }
+      .task-grid { grid-template-columns: 1fr; }
+      .actions { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -385,6 +415,7 @@
       <div class="actions">
         <button class="action-btn" id="backdateBtn">押し忘れ入力</button>
         <button class="action-btn" id="addTaskBtn">タスク追加</button>
+        <button class="action-btn" id="manageTaskBtn">タスク管理</button>
         <button class="action-btn danger" id="undoBtn">直前取消</button>
       </div>
     </section>
@@ -397,8 +428,8 @@
     <section class="card">
       <h2 class="section-title">メモ</h2>
       <p class="muted">
-        データはこのブラウザ内に保存されます。まずはiPhoneのSafari/Chromeで使うMVPです。<br>
-        別端末と同期したい場合は、次の段階でGoogleスプレッドシート連携またはFirebase連携にします。
+        データはこのブラウザ内に保存されます。家族で同じURLを使っても、各自の端末・ブラウザごとに別管理です。<br>
+        タスク管理で非表示にした内容も、その端末内だけに保存されます。
       </p>
     </section>
   </div>
@@ -431,6 +462,20 @@
     </div>
   </dialog>
 
+  <dialog id="manageTaskDialog">
+    <div class="modal-body">
+      <div class="modal-title">タスク管理</div>
+      <p class="muted">
+        使わないタスクは「非表示」にできます。完全削除ではないので、あとで戻せます。設定はこの端末・ブラウザ内だけに保存されます。
+      </p>
+      <div class="task-manage-list" id="taskManageList"></div>
+      <div class="modal-actions">
+        <button class="secondary" id="resetTasksBtn">初期状態に戻す</button>
+        <button class="primary" id="manageTaskClose">閉じる</button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -454,15 +499,13 @@
     ];
 
     const DEFAULT_SETTINGS = {
-      // 家庭版の初期巡航ライン。
-      // 平日朝は短いのでAM1、夜中心でPM2。休日はまず合計5を狙う設計。
       weekdayAmTarget: 1,
       weekdayPmTarget: 2,
       weekendAmTarget: 3,
       weekendPmTarget: 2
     };
 
-    let tasks = loadJson(STORAGE_KEY_TASKS, DEFAULT_TASKS);
+    let tasks = normalizeTasks(loadJson(STORAGE_KEY_TASKS, DEFAULT_TASKS));
     let logs = loadJson(STORAGE_KEY_LOGS, []);
     let settings = loadJson(STORAGE_KEY_SETTINGS, DEFAULT_SETTINGS);
 
@@ -483,6 +526,8 @@
     const addTaskDialog = document.getElementById("addTaskDialog");
     const newTaskNameEl = document.getElementById("newTaskName");
     const newTaskPointEl = document.getElementById("newTaskPoint");
+    const manageTaskDialog = document.getElementById("manageTaskDialog");
+    const taskManageListEl = document.getElementById("taskManageList");
 
     document.getElementById("backdateBtn").addEventListener("click", openBackdateDialog);
     document.getElementById("backdateCancel").addEventListener("click", () => backdateDialog.close());
@@ -490,8 +535,12 @@
     document.getElementById("addTaskBtn").addEventListener("click", openAddTaskDialog);
     document.getElementById("addTaskCancel").addEventListener("click", () => addTaskDialog.close());
     document.getElementById("addTaskSave").addEventListener("click", saveNewTask);
+    document.getElementById("manageTaskBtn").addEventListener("click", openManageTaskDialog);
+    document.getElementById("manageTaskClose").addEventListener("click", () => manageTaskDialog.close());
+    document.getElementById("resetTasksBtn").addEventListener("click", resetTasksToDefault);
     document.getElementById("undoBtn").addEventListener("click", undoLastLog);
 
+    saveAll();
     render();
     setInterval(renderScoreOnly, 10000);
 
@@ -502,6 +551,38 @@
       } catch (e) {
         return structuredClone(fallback);
       }
+    }
+
+    function normalizeTasks(savedTasks) {
+      const saved = Array.isArray(savedTasks) ? savedTasks : [];
+      const byName = new Map(saved.map(t => [t.name, t]));
+      const merged = [];
+
+      DEFAULT_TASKS.forEach(defaultTask => {
+        const existing = byName.get(defaultTask.name);
+        if (existing) {
+          merged.push({
+            name: existing.name,
+            point: Number(existing.point || defaultTask.point || 1),
+            active: existing.active !== false
+          });
+        } else {
+          merged.push({ ...defaultTask });
+        }
+      });
+
+      saved.forEach(task => {
+        if (!task || !task.name) return;
+        if (!DEFAULT_TASKS.some(defaultTask => defaultTask.name === task.name)) {
+          merged.push({
+            name: task.name,
+            point: Number(task.point || 1),
+            active: task.active !== false
+          });
+        }
+      });
+
+      return merged;
     }
 
     function saveAll() {
@@ -531,8 +612,7 @@
       setLine(amLineEl, amNoteEl, am, target.am);
       setLine(pmLineEl, pmNoteEl, pm, target.pm);
 
-      const best = getHourlyBest(now, total);
-      bestBoxEl.textContent = best;
+      bestBoxEl.textContent = getHourlyBest(now, total);
     }
 
     function setLine(valueEl, noteEl, value, target) {
@@ -548,7 +628,17 @@
 
     function renderTasks() {
       taskGridEl.innerHTML = "";
-      tasks.filter(t => t.active !== false).forEach(task => {
+      const activeTasks = tasks.filter(t => t.active !== false);
+
+      if (activeTasks.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "表示中のタスクがありません。タスク管理から表示を戻すか、タスク追加してください。";
+        taskGridEl.appendChild(empty);
+        return;
+      }
+
+      activeTasks.forEach(task => {
         const btn = document.createElement("button");
         btn.className = "task-btn";
         btn.textContent = `${task.name}  +${task.point}`;
@@ -594,6 +684,56 @@
       });
     }
 
+    function renderTaskManageList() {
+      taskManageListEl.innerHTML = "";
+      tasks.forEach((task, index) => {
+        const item = document.createElement("div");
+        item.className = `task-manage-item ${task.active === false ? "hidden-task" : ""}`;
+
+        const left = document.createElement("div");
+        const name = document.createElement("div");
+        name.className = "task-manage-name";
+        name.textContent = task.name;
+        const meta = document.createElement("div");
+        meta.className = "task-manage-meta";
+        meta.textContent = `+${task.point} pt / ${task.active === false ? "非表示中" : "表示中"}`;
+        left.appendChild(name);
+        left.appendChild(meta);
+
+        const toggle = document.createElement("button");
+        toggle.className = `toggle-btn ${task.active === false ? "off" : ""}`;
+        toggle.textContent = task.active === false ? "表示する" : "隠す";
+        toggle.addEventListener("click", () => toggleTaskActive(index));
+
+        item.appendChild(left);
+        item.appendChild(toggle);
+        taskManageListEl.appendChild(item);
+      });
+    }
+
+    function toggleTaskActive(index) {
+      tasks[index].active = tasks[index].active === false ? true : false;
+      saveAll();
+      render();
+      renderTaskManageList();
+      showToast(tasks[index].active ? `表示：${tasks[index].name}` : `非表示：${tasks[index].name}`);
+    }
+
+    function openManageTaskDialog() {
+      renderTaskManageList();
+      manageTaskDialog.showModal();
+    }
+
+    function resetTasksToDefault() {
+      const ok = confirm("タスク一覧を初期状態に戻しますか？\n追加したタスクや非表示設定もリセットされます。\n履歴データは消えません。");
+      if (!ok) return;
+      tasks = structuredClone(DEFAULT_TASKS);
+      saveAll();
+      render();
+      renderTaskManageList();
+      showToast("タスク一覧を初期状態に戻しました");
+    }
+
     function addLog(task, doneAt) {
       logs.push({
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
@@ -620,7 +760,12 @@
 
     function openBackdateDialog() {
       backdateTaskEl.innerHTML = "";
-      tasks.filter(t => t.active !== false).forEach((task, index) => {
+      const activeTasks = tasks.filter(t => t.active !== false);
+      if (activeTasks.length === 0) {
+        showToast("表示中のタスクがありません");
+        return;
+      }
+      activeTasks.forEach((task, index) => {
         const opt = document.createElement("option");
         opt.value = index;
         opt.textContent = `${task.name} +${task.point}`;
@@ -674,9 +819,7 @@
     function getTodayTarget(date) {
       const day = date.getDay();
       const isWeekend = day === 0 || day === 6;
-      if (isWeekend) {
-        return { am: settings.weekendAmTarget, pm: settings.weekendPmTarget };
-      }
+      if (isWeekend) return { am: settings.weekendAmTarget, pm: settings.weekendPmTarget };
       return { am: settings.weekdayAmTarget, pm: settings.weekdayPmTarget };
     }
 
@@ -694,9 +837,7 @@
         }
       });
 
-      if (byDay.size === 0) {
-        return `${currentHour}時台ベスト：まだ過去データなし / 今日 ${todayTotal}pt`;
-      }
+      if (byDay.size === 0) return `${currentHour}時台ベスト：まだ過去データなし / 今日 ${todayTotal}pt`;
 
       let bestDay = "";
       let best = 0;
