@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>地力 × アクセル 家庭版</title>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #111827;
+      --soft: #f3f4f6;
+      --good: #166534;
+      --warn: #92400e;
+      --danger: #991b1b;
+      --shadow: 0 10px 25px rgba(17, 24, 39, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 18px 14px 32px;
+    }
+
+    header {
+      padding: 8px 4px 14px;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin: 0;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 6px 0 0;
+      line-height: 1.5;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin: 12px 0;
+    }
+
+    .score-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .score-main {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .score-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .date-text {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: right;
+      line-height: 1.4;
+    }
+
+    .line-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .line-box {
+      background: var(--soft);
+      border-radius: 14px;
+      padding: 12px;
+      min-height: 78px;
+    }
+
+    .line-name {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .line-value {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .line-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .best-box {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #fafafa;
+      border: 1px dashed var(--line);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin: 0 0 10px;
+    }
+
+    .task-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+    }
+
+    .task-btn {
+      min-height: 58px;
+      border-radius: 16px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.25;
+      padding: 10px;
+      box-shadow: 0 8px 18px rgba(17, 24, 39, 0.16);
+    }
+
+    .task-btn:active {
+      transform: translateY(1px) scale(0.99);
+      opacity: 0.9;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .action-btn {
+      border-radius: 14px;
+      padding: 12px 8px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .action-btn.danger {
+      color: var(--danger);
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 360px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .history-main {
+      min-width: 0;
+    }
+
+    .history-task {
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .history-time {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .history-point {
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    dialog {
+      width: calc(100% - 28px);
+      max-width: 540px;
+      border: none;
+      border-radius: 20px;
+      padding: 0;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    .modal-body {
+      padding: 18px;
+      background: #ffffff;
+      border-radius: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin: 12px 0 6px;
+    }
+
+    input, select {
+      width: 100%;
+      font: inherit;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #ffffff;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #ffffff;
+      border-radius: 14px;
+      padding: 13px 10px;
+      font-weight: 800;
+    }
+
+    .secondary {
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 13px 10px;
+      font-weight: 800;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(17, 24, 39, 0.94);
+      color: #ffffff;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      z-index: 999;
+      max-width: calc(100% - 28px);
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-6px);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 430px) {
+      .app {
+        padding: 14px 10px 28px;
+      }
+
+      .title {
+        font-size: 25px;
+      }
+
+      .score-main {
+        font-size: 31px;
+      }
+
+      .task-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1 class="title">地力 × アクセル 家庭版</h1>
+      <p class="subtitle">家のこと・体のこと・投資のこと。やると未来が軽くなる行動を、1タップで記録。</p>
+    </header>
+
+    <section class="card">
+      <div class="score-row">
+        <div>
+          <div class="score-label">今日のアクセルpt</div>
+          <div class="score-main"><span id="todayScore">0</span> pt</div>
+        </div>
+        <div class="date-text" id="dateText"></div>
+      </div>
+
+      <div class="line-grid">
+        <div class="line-box">
+          <div class="line-name">AM巡航ライン</div>
+          <div class="line-value" id="amLine">0 / 0</div>
+          <div class="line-note" id="amNote"></div>
+        </div>
+        <div class="line-box">
+          <div class="line-name">PM巡航ライン</div>
+          <div class="line-value" id="pmLine">0 / 0</div>
+          <div class="line-note" id="pmNote"></div>
+        </div>
+      </div>
+
+      <div class="best-box" id="bestBox">時刻別ベストを計算中...</div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">地力タスク</h2>
+      <div class="task-grid" id="taskGrid"></div>
+
+      <div class="actions">
+        <button class="action-btn" id="backdateBtn">押し忘れ入力</button>
+        <button class="action-btn" id="addTaskBtn">タスク追加</button>
+        <button class="action-btn danger" id="undoBtn">直前取消</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">今日の履歴</h2>
+      <div class="history-list" id="historyList"></div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">メモ</h2>
+      <p class="muted">
+        データはこのブラウザ内に保存されます。まずはiPhoneのSafari/Chromeで使うMVPです。<br>
+        別端末と同期したい場合は、次の段階でGoogleスプレッドシート連携またはFirebase連携にします。
+      </p>
+    </section>
+  </div>
+
+  <dialog id="backdateDialog">
+    <div class="modal-body">
+      <div class="modal-title">押し忘れ入力</div>
+      <label for="backdateTask">タスク</label>
+      <select id="backdateTask"></select>
+      <label for="backdateTime">実行した時刻</label>
+      <input id="backdateTime" type="datetime-local" />
+      <div class="modal-actions">
+        <button class="secondary" id="backdateCancel">キャンセル</button>
+        <button class="primary" id="backdateSave">記録する</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="addTaskDialog">
+    <div class="modal-body">
+      <div class="modal-title">タスク追加</div>
+      <label for="newTaskName">タスク名</label>
+      <input id="newTaskName" type="text" placeholder="例：風呂掃除" />
+      <label for="newTaskPoint">点数</label>
+      <input id="newTaskPoint" type="number" min="1" value="1" />
+      <div class="modal-actions">
+        <button class="secondary" id="addTaskCancel">キャンセル</button>
+        <button class="primary" id="addTaskSave">追加する</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY_LOGS = "jirikiAccelHome.logs.v1";
+    const STORAGE_KEY_TASKS = "jirikiAccelHome.tasks.v1";
+    const STORAGE_KEY_SETTINGS = "jirikiAccelHome.settings.v1";
+
+    const DEFAULT_TASKS = [
+      { name: "片付け（何か2つ）", point: 1, active: true },
+      { name: "トイレ掃除", point: 1, active: true },
+      { name: "ガレージ整理(何か2つ)", point: 1, active: true },
+      { name: "作り置き料理", point: 1, active: true },
+      { name: "イベントスケジュールイン", point: 1, active: true },
+      { name: "予約関係初動", point: 1, active: true },
+      { name: "予約", point: 1, active: true },
+      { name: "後回しLINE返信", point: 1, active: true },
+      { name: "本日の振り返り", point: 1, active: true },
+      { name: "好印象喋りトレーニング", point: 1, active: true },
+      { name: "筋トレ", point: 1, active: true },
+      { name: "ファンダメンタルズ分析", point: 1, active: true }
+    ];
+
+    const DEFAULT_SETTINGS = {
+      // 家庭版の初期巡航ライン。
+      // 平日朝は短いのでAM1、夜中心でPM2。休日はまず合計5を狙う設計。
+      weekdayAmTarget: 1,
+      weekdayPmTarget: 2,
+      weekendAmTarget: 3,
+      weekendPmTarget: 2
+    };
+
+    let tasks = loadJson(STORAGE_KEY_TASKS, DEFAULT_TASKS);
+    let logs = loadJson(STORAGE_KEY_LOGS, []);
+    let settings = loadJson(STORAGE_KEY_SETTINGS, DEFAULT_SETTINGS);
+
+    const todayScoreEl = document.getElementById("todayScore");
+    const dateTextEl = document.getElementById("dateText");
+    const amLineEl = document.getElementById("amLine");
+    const pmLineEl = document.getElementById("pmLine");
+    const amNoteEl = document.getElementById("amNote");
+    const pmNoteEl = document.getElementById("pmNote");
+    const bestBoxEl = document.getElementById("bestBox");
+    const taskGridEl = document.getElementById("taskGrid");
+    const historyListEl = document.getElementById("historyList");
+    const toastEl = document.getElementById("toast");
+
+    const backdateDialog = document.getElementById("backdateDialog");
+    const backdateTaskEl = document.getElementById("backdateTask");
+    const backdateTimeEl = document.getElementById("backdateTime");
+    const addTaskDialog = document.getElementById("addTaskDialog");
+    const newTaskNameEl = document.getElementById("newTaskName");
+    const newTaskPointEl = document.getElementById("newTaskPoint");
+
+    document.getElementById("backdateBtn").addEventListener("click", openBackdateDialog);
+    document.getElementById("backdateCancel").addEventListener("click", () => backdateDialog.close());
+    document.getElementById("backdateSave").addEventListener("click", saveBackdatedLog);
+    document.getElementById("addTaskBtn").addEventListener("click", openAddTaskDialog);
+    document.getElementById("addTaskCancel").addEventListener("click", () => addTaskDialog.close());
+    document.getElementById("addTaskSave").addEventListener("click", saveNewTask);
+    document.getElementById("undoBtn").addEventListener("click", undoLastLog);
+
+    render();
+    setInterval(renderScoreOnly, 10000);
+
+    function loadJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : structuredClone(fallback);
+      } catch (e) {
+        return structuredClone(fallback);
+      }
+    }
+
+    function saveAll() {
+      localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(logs));
+      localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(tasks));
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+    }
+
+    function render() {
+      renderTasks();
+      renderScoreOnly();
+      renderHistory();
+    }
+
+    function renderScoreOnly() {
+      const now = new Date();
+      const todayKey = toDateKey(now);
+      const todayLogs = logs.filter(log => toDateKey(new Date(log.doneAt)) === todayKey);
+      const total = sumPoints(todayLogs);
+      const am = sumPoints(todayLogs.filter(log => new Date(log.doneAt).getHours() < 12));
+      const pm = sumPoints(todayLogs.filter(log => new Date(log.doneAt).getHours() >= 12));
+      const target = getTodayTarget(now);
+
+      todayScoreEl.textContent = total;
+      dateTextEl.innerHTML = `${formatDateJa(now)}<br>${formatTime(now)}`;
+
+      setLine(amLineEl, amNoteEl, am, target.am);
+      setLine(pmLineEl, pmNoteEl, pm, target.pm);
+
+      const best = getHourlyBest(now, total);
+      bestBoxEl.textContent = best;
+    }
+
+    function setLine(valueEl, noteEl, value, target) {
+      valueEl.textContent = `${value} / ${target}`;
+      if (value >= target) {
+        noteEl.textContent = "達成。巡航速度OK。";
+        noteEl.style.color = "var(--good)";
+      } else {
+        noteEl.textContent = `あと${target - value}アクセル`;
+        noteEl.style.color = "var(--warn)";
+      }
+    }
+
+    function renderTasks() {
+      taskGridEl.innerHTML = "";
+      tasks.filter(t => t.active !== false).forEach(task => {
+        const btn = document.createElement("button");
+        btn.className = "task-btn";
+        btn.textContent = `${task.name}  +${task.point}`;
+        btn.addEventListener("click", () => addLog(task, new Date()));
+        taskGridEl.appendChild(btn);
+      });
+    }
+
+    function renderHistory() {
+      const todayKey = toDateKey(new Date());
+      const todayLogs = logs
+        .filter(log => toDateKey(new Date(log.doneAt)) === todayKey)
+        .sort((a, b) => new Date(b.doneAt) - new Date(a.doneAt));
+
+      historyListEl.innerHTML = "";
+      if (todayLogs.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "今日はまだ記録がありません。まずは1アクセル踏みましょう。";
+        historyListEl.appendChild(empty);
+        return;
+      }
+
+      todayLogs.forEach(log => {
+        const item = document.createElement("div");
+        item.className = "history-item";
+        const left = document.createElement("div");
+        left.className = "history-main";
+        const task = document.createElement("div");
+        task.className = "history-task";
+        task.textContent = log.taskName;
+        const time = document.createElement("div");
+        time.className = "history-time";
+        time.textContent = formatTime(new Date(log.doneAt));
+        left.appendChild(task);
+        left.appendChild(time);
+        const point = document.createElement("div");
+        point.className = "history-point";
+        point.textContent = `+${log.point}`;
+        item.appendChild(left);
+        item.appendChild(point);
+        historyListEl.appendChild(item);
+      });
+    }
+
+    function addLog(task, doneAt) {
+      logs.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+        taskName: task.name,
+        point: Number(task.point || 1),
+        doneAt: doneAt.toISOString()
+      });
+      saveAll();
+      render();
+      showToast(`記録：${task.name} +${task.point}`);
+    }
+
+    function undoLastLog() {
+      if (logs.length === 0) {
+        showToast("取消できる履歴がありません");
+        return;
+      }
+      logs.sort((a, b) => new Date(a.doneAt) - new Date(b.doneAt));
+      const removed = logs.pop();
+      saveAll();
+      render();
+      showToast(`取消：${removed.taskName}`);
+    }
+
+    function openBackdateDialog() {
+      backdateTaskEl.innerHTML = "";
+      tasks.filter(t => t.active !== false).forEach((task, index) => {
+        const opt = document.createElement("option");
+        opt.value = index;
+        opt.textContent = `${task.name} +${task.point}`;
+        backdateTaskEl.appendChild(opt);
+      });
+      backdateTimeEl.value = toDatetimeLocalValue(new Date());
+      backdateDialog.showModal();
+    }
+
+    function saveBackdatedLog() {
+      const activeTasks = tasks.filter(t => t.active !== false);
+      const task = activeTasks[Number(backdateTaskEl.value)];
+      const value = backdateTimeEl.value;
+      if (!task || !value) {
+        showToast("タスクと時刻を指定してください");
+        return;
+      }
+      addLog(task, new Date(value));
+      backdateDialog.close();
+    }
+
+    function openAddTaskDialog() {
+      newTaskNameEl.value = "";
+      newTaskPointEl.value = "1";
+      addTaskDialog.showModal();
+      setTimeout(() => newTaskNameEl.focus(), 80);
+    }
+
+    function saveNewTask() {
+      const name = newTaskNameEl.value.trim();
+      const point = Number(newTaskPointEl.value || 1);
+      if (!name) {
+        showToast("タスク名を入力してください");
+        return;
+      }
+      if (!Number.isInteger(point) || point <= 0) {
+        showToast("点数は1以上の整数で入力してください");
+        return;
+      }
+      if (tasks.some(t => t.name === name)) {
+        showToast("同じ名前のタスクがあります");
+        return;
+      }
+      tasks.push({ name, point, active: true });
+      saveAll();
+      render();
+      addTaskDialog.close();
+      showToast(`追加：${name}`);
+    }
+
+    function getTodayTarget(date) {
+      const day = date.getDay();
+      const isWeekend = day === 0 || day === 6;
+      if (isWeekend) {
+        return { am: settings.weekendAmTarget, pm: settings.weekendPmTarget };
+      }
+      return { am: settings.weekdayAmTarget, pm: settings.weekdayPmTarget };
+    }
+
+    function getHourlyBest(now, todayTotal) {
+      const todayKey = toDateKey(now);
+      const currentHour = now.getHours();
+      const byDay = new Map();
+
+      logs.forEach(log => {
+        const d = new Date(log.doneAt);
+        const key = toDateKey(d);
+        if (key === todayKey) return;
+        if (d.getHours() <= currentHour) {
+          byDay.set(key, (byDay.get(key) || 0) + Number(log.point || 0));
+        }
+      });
+
+      if (byDay.size === 0) {
+        return `${currentHour}時台ベスト：まだ過去データなし / 今日 ${todayTotal}pt`;
+      }
+
+      let bestDay = "";
+      let best = 0;
+      byDay.forEach((value, key) => {
+        if (value > best) {
+          best = value;
+          bestDay = key;
+        }
+      });
+
+      const diff = best - todayTotal;
+      if (diff > 0) return `${currentHour}時台ベスト：${best}pt（${bestDay}） / 今日 ${todayTotal}pt / あと${diff}pt`;
+      if (diff === 0) return `${currentHour}時台ベスト：${best}pt（${bestDay}） / 今日 ${todayTotal}pt / ベストタイ`;
+      return `${currentHour}時台ベスト：${best}pt（${bestDay}） / 今日 ${todayTotal}pt / +${Math.abs(diff)}pt更新中`;
+    }
+
+    function sumPoints(items) {
+      return items.reduce((sum, item) => sum + Number(item.point || 0), 0);
+    }
+
+    function toDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDateJa(date) {
+      const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+      return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}（${weekdays[date.getDay()]}）`;
+    }
+
+    function formatTime(date) {
+      const h = String(date.getHours()).padStart(2, "0");
+      const m = String(date.getMinutes()).padStart(2, "0");
+      return `${h}:${m}`;
+    }
+
+    function toDatetimeLocalValue(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      const h = String(date.getHours()).padStart(2, "0");
+      const min = String(date.getMinutes()).padStart(2, "0");
+      return `${y}-${m}-${d}T${h}:${min}`;
+    }
+
+    let toastTimer = null;
+    function showToast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1700);
+    }
+  </script>
+</body>
+</html>
